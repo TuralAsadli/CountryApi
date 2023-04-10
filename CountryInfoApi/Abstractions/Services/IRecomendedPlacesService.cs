@@ -6,8 +6,8 @@ namespace CountryInfoApi.Abstractions.Services
 {
     public interface IRecomendedPlacesService
     {
-        RecomendedPlace GetById(Guid id);
-        IEnumerable<RecomendedPlace> GetAll();
+        Task<RecomendedPlaceGetDto> GetById(Guid id);
+        Task<IEnumerable<RecomendedPlaceGetDto>> GetAll();
         Task CreateAsync(Guid cityId, RecomendedPlaceDto place);
         Task UpdateAsync(string id, RecomendedPlaceDto place);
         Task DeleteAsync(string id);

@@ -3,21 +3,25 @@ using CountryInfoApi.Abstractions.Services;
 using CountryInfoApi.Dtos.City;
 using CountryInfoApi.Dtos.RecomendedPlace;
 using CountryInfoApi.Models;
+using CountryInfoApi.Models.Base;
+using CountryInfoApi.Utilites.CloudStorage;
 using CountryInfoApi.Utilites.FiIeExtentions;
+using Microsoft.Extensions.Options;
 
 namespace CountryInfoApi.Service
 {
     public class RecomendedPlaceService : IRecomendedPlacesService
     {
-        public readonly IWebHostEnvironment _hostingEnvironment;
+        
         public readonly IBaseRepository<City> _cities;
         public readonly IBaseRepository<RecomendedPlace> _db;
-
-        public RecomendedPlaceService(IWebHostEnvironment hostingEnvironment, IBaseRepository<RecomendedPlace> db, IBaseRepository<City> cities)
+        ApiKeys _apiKeys;
+        public RecomendedPlaceService(IBaseRepository<RecomendedPlace> db, IBaseRepository<City> cities, IOptions<ApiKeys> apiKeys)
         {
-            _hostingEnvironment = hostingEnvironment;
+           
             _db = db;
             _cities = cities;
+            _apiKeys = apiKeys.Value;
         }
 
         public async Task CreateAsync(Guid cityId, RecomendedPlaceDto placeDto)
@@ -34,12 +38,12 @@ namespace CountryInfoApi.Service
             {
                 if (item.CheckImgFileType())
                 {
-                    var fileName = item.RenameImg();
-                    item.CreateImgFile(Path.Combine(_hostingEnvironment.ContentRootPath, "StaticFiles", fileName));
+                    CLoudStorage storage = new CLoudStorage(_apiKeys.Key);
+                    var imgpath = await storage.UploadImageAsync(item, @"Apps/CountryApi");
 
 
                     PlaceImg placeimg = new PlaceImg();
-                    placeimg.ImgPath = fileName;
+                    placeimg.ImgPath = imgpath;
                     placeImgs.Add(placeimg);
                 }
             }
@@ -53,22 +57,88 @@ namespace CountryInfoApi.Service
         {
             if (Guid.TryParse(id, out Guid guid))
             {
-                var city = _db.Get(guid, c => c.PlaceImgs);
-                if (city != null)
+                var place = _db.Get(guid, c => c.PlaceImgs);
+                if (place != null)
                 {
-                    await _db.Remove(city);
+                    CLoudStorage storage = new CLoudStorage(_apiKeys.Key);
+                    foreach (var img in place.PlaceImgs)
+                    {
+                        await storage.RemoveImg(img.ImgPath);
+                    }
+                    await _db.Remove(place);
                 }
             };
         }
 
-        public IEnumerable<RecomendedPlace> GetAll()
+        public async Task<IEnumerable<RecomendedPlaceGetDto>> GetAll()
         {
-            return _db.GetAll(i => i.PlaceImgs, c => c.City);
+            var places = _db.GetAll(i => i.PlaceImgs,c => c.City);
+            List<RecomendedPlaceGetDto> placesDto = new();
+            foreach (var place in places)
+            {
+                RecomendedPlaceGetDto placeDto = new RecomendedPlaceGetDto()
+                {
+                    Id = place.Id,
+                    PlaceName = place.PlaceName,
+                    Coordinates = place.Coordinates,
+                    Description = place.Description,
+                    City = new GetCityDto
+                    {
+                        Id = place.City.Id,
+                        Area = place.City.Area,
+                        CityName = place.City.CityName,
+                        Description = place.City.Description,
+                        Population =place.City.Population
+                    }
+
+                };
+                List<byte[]> imgs = new List<byte[]>();
+
+                foreach (var img in place.PlaceImgs)
+                {
+                    CLoudStorage storage = new CLoudStorage(_apiKeys.Key);
+                    var imageBytes = await storage.GetImg(img.ImgPath);
+                    imgs.Add(imageBytes);
+                }
+
+                placeDto.PlacesImgs = imgs;
+                placesDto.Add(placeDto);
+            }
+
+            return placesDto;
         }
 
-        public RecomendedPlace GetById(Guid id)
+        public async Task<RecomendedPlaceGetDto> GetById(Guid id)
         {
-            return _db.Get(id, c => c.PlaceImgs);
+            var place = _db.Get(id, c => c.PlaceImgs);
+            RecomendedPlaceGetDto placeDto = new RecomendedPlaceGetDto()
+            {
+                Id=place.Id,
+                PlaceName = place.PlaceName,
+                Coordinates = place.Coordinates,
+                Description = place.Description,
+                City = new GetCityDto
+                {
+                    Id = place.City.Id,
+                    Area = place.City.Area,
+                    CityName = place.City.CityName,
+                    Description = place.City.Description,
+                    Population = place.City.Population
+                }
+
+            };
+            List<byte[]> imgs = new List<byte[]>();
+
+            foreach (var img in place.PlaceImgs)
+            {
+                CLoudStorage storage = new CLoudStorage(_apiKeys.Key);
+                var imageBytes = await storage.GetImg(img.ImgPath);
+                imgs.Add(imageBytes);
+            }
+
+            placeDto.PlacesImgs = imgs;
+
+            return placeDto;
         }
 
         public async Task UpdateAsync(string id, RecomendedPlaceDto placeDto)
@@ -82,9 +152,10 @@ namespace CountryInfoApi.Service
 
             if (placeDto.PlacesImgs != null)
             {
+                CLoudStorage storage = new CLoudStorage(_apiKeys.Key);
                 foreach (var img in existingObject.PlaceImgs)
                 {
-                    ImgExtention.DeleteImgFile(Path.Combine(_hostingEnvironment.ContentRootPath, "StaticFiles", img.ImgPath));
+                    await storage.RemoveImg(img.ImgPath);
                 }
 
                 List<PlaceImg> placeImgs = new List<PlaceImg>();
@@ -92,18 +163,16 @@ namespace CountryInfoApi.Service
                 {
                     if (img.CheckImgFileType())
                     {
-                        var fileName = img.RenameImg();
-                        img.CreateImgFile(Path.Combine(_hostingEnvironment.ContentRootPath, "StaticFiles", fileName));
+                        var imgpath = await storage.UploadImageAsync(img, @"Apps/CountryApi");
 
 
                         PlaceImg placeimg = new PlaceImg();
-                        placeimg.ImgPath = fileName;
+                        placeimg.ImgPath = imgpath;
                         placeImgs.Add(placeimg);
                     }
                 }
                 existingObject.PlaceImgs = placeImgs;
                 await _db.Update(existingObject);
-
             }
         }
     }

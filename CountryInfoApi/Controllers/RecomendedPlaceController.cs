@@ -21,15 +21,16 @@ namespace CountryInfoApi.Controllers
         }
 
         [HttpGet("GetCityPlaces/{cityId}")]
-        public IActionResult GetCityPlaces(string cityId)
+        public async Task<IActionResult> GetCityPlaces(string cityId)
         {
             if (!Guid.TryParse(cityId,out Guid guid))
             {
                 return NotFound();
             }
 
-            var places = _db.GetAll().Where(p => p.CityId == guid);
-            if (places == null)
+            var places = await _db.GetAll();
+
+            if (places.Where(p => p.City.Id == guid) == null)
             {
                 return NotFound();
             }
@@ -39,7 +40,7 @@ namespace CountryInfoApi.Controllers
                 ReferenceHandler = ReferenceHandler.IgnoreCycles,
                 WriteIndented = true
             };
-            var res = JsonSerializer.Serialize(places, options);
+            var res = JsonSerializer.Serialize(places.Where(p => p.City.Id == guid), options);
             return Ok(res);
         }
 

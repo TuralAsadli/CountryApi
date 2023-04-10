@@ -49,5 +49,19 @@ namespace CountryInfoApi.Utilites.CloudStorage
         {
             return Guid.NewGuid().ToString() + FileName;
         }
+
+        public async Task<byte[]> GetImg(string path)
+        {
+            
+            var fileMetadata = await _client.Files.DownloadAsync(path);
+            var imageBytes = await fileMetadata.GetContentAsByteArrayAsync();
+
+            return imageBytes;
+        }
+
+        public async Task RemoveImg(string path)
+        {
+            await _client.Files.DeleteV2Async(path);
+        }
     }
 }

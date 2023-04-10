@@ -11,6 +11,7 @@ namespace CountryInfoApi.Dtos.RecomendedPlace
         public string Coordinates { get; set; }
         public string Description { get; set; }
 
+
         public IEnumerable<IFormFile> PlacesImgs { get; set; }
     }
 }

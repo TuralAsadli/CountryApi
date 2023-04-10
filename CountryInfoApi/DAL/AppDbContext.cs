@@ -10,6 +10,7 @@ namespace CountryInfoApi.DAL
         }
 
         public DbSet<City> Cities { get; set; }
+        public DbSet<User> Users { get; set; }
 
         public DbSet<CityImg> CityImgs { get; set; }
         public DbSet<RecomendedPlace> RecomendedPlaces { get; set; }

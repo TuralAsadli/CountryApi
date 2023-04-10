@@ -17,11 +17,13 @@ using Dropbox.Api.Files;
 using CountryInfoApi.Utilites.CloudStorage;
 using CountryInfoApi.Models.Base;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CountryInfoApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class CityController : ControllerBase
     {
         ICityService _db;
@@ -68,14 +70,16 @@ namespace CountryInfoApi.Controllers
         }
 
         [HttpGet("GetCities")]
-        public IActionResult GetCities()
+        public async Task<IActionResult> GetCities()
         {
             JsonSerializerOptions options = new()
             {
                 ReferenceHandler = ReferenceHandler.IgnoreCycles,
                 WriteIndented = true
             };
-            var res = JsonSerializer.Serialize(_db.GetAll(), options); 
+            
+            
+            var res = JsonSerializer.Serialize(await _db.GetAll(), options); 
             return Ok(res);
         }
 
