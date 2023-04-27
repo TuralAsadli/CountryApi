@@ -1,6 +1,7 @@
 ﻿using Dropbox.Api.Files;
 using Dropbox.Api;
 
+
 namespace CountryInfoApi.Utilites.CloudStorage
 {
     public class CLoudStorage
@@ -15,6 +16,10 @@ namespace CountryInfoApi.Utilites.CloudStorage
 
         public async Task<string> UploadImageAsync(IFormFile file, string folderName)
         {
+            DropboxClientConfig config = new DropboxClientConfig()
+            {
+                HttpClient = new HttpClient()
+            };
             var folder = await GetOrCreateFolderAsync(folderName);
             var path = $"{folder.PathLower}/{ChageFileName(file.FileName)}";
             using (var stream = file.OpenReadStream())
@@ -62,6 +67,11 @@ namespace CountryInfoApi.Utilites.CloudStorage
         public async Task RemoveImg(string path)
         {
             await _client.Files.DeleteV2Async(path);
+        }
+
+        public void Test()
+        {
+            
         }
     }
 }

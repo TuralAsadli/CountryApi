@@ -29,7 +29,7 @@ namespace CountryInfoApi.Repository
             return await _dbSet.FindAsync(id);
         }
 
-        public T Get(Guid id,params Expression<Func<T, object>>[] includes)
+        public async Task<T> Get(Guid id,params Expression<Func<T, object>>[] includes)
         {
             IQueryable<T> query =  _dbSet;
 
@@ -46,7 +46,7 @@ namespace CountryInfoApi.Repository
             return _dbSet;
         }
 
-        public IQueryable<T> GetAll(params Expression<Func<T, object>>[] includes)
+        public async Task<IQueryable<T>> GetAll(params Expression<Func<T, object>>[] includes)
         {
             IQueryable<T> query = _dbSet;
 

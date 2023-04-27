@@ -1,4 +1,3 @@
-using Com.CloudRail.SI.Services;
 using CountryInfoApi.Abstractions.Repositories;
 using CountryInfoApi.Abstractions.Services;
 using CountryInfoApi.DAL;
@@ -7,10 +6,7 @@ using CountryInfoApi.Models.Base;
 using CountryInfoApi.Repository;
 using CountryInfoApi.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
@@ -21,7 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    options.UseMySql(builder.Configuration.GetConnectionString("MySql"), new MySqlServerVersion(new Version(8, 0, 33)));
 });
 
 builder.Services.Configure<ApiKeys>(builder.Configuration.GetSection("ApiKeys"));
@@ -37,8 +33,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme 
-    { 
+    options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+    {
         Description = "JWT Authorization header using the Bearer scheme.",
         In = ParameterLocation.Header,
         Name = "Authorization",
@@ -49,17 +45,17 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 
- builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetSection("JwtToken:Token").Value)),
-            ValidateIssuer = false,
-            ValidateAudience = false
-        };
-    });
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+   .AddJwtBearer(options =>
+   {
+       options.TokenValidationParameters = new TokenValidationParameters
+       {
+           ValidateIssuerSigningKey = true,
+           IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetSection("JwtToken:Token").Value)),
+           ValidateIssuer = false,
+           ValidateAudience = false
+       };
+   });
 
 
 

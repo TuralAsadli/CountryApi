@@ -4,7 +4,6 @@ using CountryInfoApi.Dtos.User;
 using CountryInfoApi.Models;
 using CountryInfoApi.Utilites.JwtTokenHelpers;
 using CountryInfoApi.Utilites.PasswordHelpers;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CountryInfoApi.Controllers
@@ -24,7 +23,7 @@ namespace CountryInfoApi.Controllers
         }
 
         [HttpPost("Registration")]
-        public IActionResult Registration([FromForm] UserDto userDto)
+        public async Task<IActionResult> Registration([FromForm] UserDto userDto)
         {
             if (ModelState.IsValid)
             {
@@ -33,8 +32,8 @@ namespace CountryInfoApi.Controllers
                 PasswordHelper.HashPassword(userDto.Password, out byte[] passwordHash, out byte[] passwordSalt);
                 user.PasswordHash = passwordHash;
                 user.PasswordSalt = passwordSalt;
-                Context.Users.Add(user);
-                Context.SaveChanges();
+                await _context.Create(user);
+
                 return Ok();
             }
             return BadRequest(ModelState);
@@ -43,7 +42,7 @@ namespace CountryInfoApi.Controllers
         [HttpPost("Login")]
         public ActionResult<string> Login([FromBody] UserDto user)
         {
-            
+
             var User = _context.GetAll().FirstOrDefault(u => u.Email == user.Email);
 
             if (User == null)
@@ -56,7 +55,7 @@ namespace CountryInfoApi.Controllers
                 return Unauthorized();
             }
 
-            
+
             var token = JwtTokenHelper.CreateToken(User, _configuration);
             return Ok(token);
         }

@@ -1,9 +1,8 @@
 ﻿using CountryInfoApi.Abstractions.Services;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System.Text.Json.Serialization;
-using System.Text.Json;
 using CountryInfoApi.Dtos.RecomendedPlace;
+using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace CountryInfoApi.Controllers
 {
@@ -23,7 +22,7 @@ namespace CountryInfoApi.Controllers
         [HttpGet("GetCityPlaces/{cityId}")]
         public async Task<IActionResult> GetCityPlaces(string cityId)
         {
-            if (!Guid.TryParse(cityId,out Guid guid))
+            if (!Guid.TryParse(cityId, out Guid guid))
             {
                 return NotFound();
             }
@@ -45,14 +44,14 @@ namespace CountryInfoApi.Controllers
         }
 
         [HttpGet("GetPlace/{placeId}")]
-        public IActionResult GetPlace(string placeId)
+        public async Task<IActionResult> GetPlace(string placeId)
         {
             if (!Guid.TryParse(placeId, out Guid guid))
             {
                 return NotFound();
             }
 
-            var place = _db.GetById(guid);
+            var place = await _db.GetById(guid);
 
             if (place == null)
             {
@@ -71,11 +70,11 @@ namespace CountryInfoApi.Controllers
                                                .Select(e => e.ErrorMessage);
                 return BadRequest(errors);
             }
-            if (!Guid.TryParse(cityId,out Guid guid))
+            if (!Guid.TryParse(cityId, out Guid guid))
             {
                 return NotFound(cityId);
             }
-            var city = _cityService.GetById(guid);
+            var city = await _cityService.GetById(guid);
             if (city == null)
             {
                 return NotFound(cityId);
@@ -99,7 +98,7 @@ namespace CountryInfoApi.Controllers
                 return NotFound(id);
             }
 
-            var place = _db.GetById(guid);
+            var place = await _db.GetById(guid);
             if (place == null)
             {
                 return NotFound(id);
@@ -112,11 +111,11 @@ namespace CountryInfoApi.Controllers
         [HttpDelete("DeletePlace")]
         public async Task<IActionResult> DeletePlace(string id)
         {
-            if (!Guid.TryParse(id,out Guid guid))
+            if (!Guid.TryParse(id, out Guid guid))
             {
                 return NotFound();
             }
-            var place = _db.GetById(guid);
+            var place = await _db.GetById(guid);
 
             if (place == null)
             {

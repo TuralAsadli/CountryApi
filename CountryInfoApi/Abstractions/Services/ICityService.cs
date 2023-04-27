@@ -1,5 +1,4 @@
 ﻿using CountryInfoApi.Dtos.City;
-using CountryInfoApi.Models;
 
 namespace CountryInfoApi.Abstractions.Services
 {

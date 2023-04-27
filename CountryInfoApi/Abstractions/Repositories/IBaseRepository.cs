@@ -10,8 +10,8 @@ namespace CountryInfoApi.Abstractions.Repositories
         Task Create(T item);
         Task<T> Get(Guid id);
         IQueryable<T> GetAll();
-        T Get(Guid Id, params Expression<Func<T, object>>[] includes);
-        IQueryable<T> GetAll(params Expression<Func<T, object>>[] includes);
+        Task<T> Get(Guid Id, params Expression<Func<T, object>>[] includes);
+        Task<IQueryable<T>> GetAll(params Expression<Func<T, object>>[] includes);
         Task Remove(T item);
         Task Update(T item);
 

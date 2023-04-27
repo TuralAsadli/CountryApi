@@ -1,23 +1,14 @@
-﻿using CountryInfoApi.Abstractions.Repositories;
+﻿using CountryInfoApi.Abstractions.Services;
 using CountryInfoApi.Dtos.City;
 using CountryInfoApi.Dtos.CurrentInfo;
 using CountryInfoApi.Dtos.ForecastInfo;
-using CountryInfoApi.Models;
-using CountryInfoApi.Utilites.FiIeExtentions;
-using CountryInfoApi.Utilites.WeatherInfo;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Text.Json.Serialization;
-using System.Text.Json;
-using CountryInfoApi.Abstractions.Services;
-using Microsoft.Extensions.Options;
-using System.Net.Http.Headers;
-using Dropbox.Api;
-using Dropbox.Api.Files;
-using CountryInfoApi.Utilites.CloudStorage;
 using CountryInfoApi.Models.Base;
-using Microsoft.Extensions.Configuration;
+using CountryInfoApi.Utilites.WeatherInfo;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace CountryInfoApi.Controllers
 {
@@ -28,22 +19,12 @@ namespace CountryInfoApi.Controllers
     {
         ICityService _db;
         ApiKeys _apiKeys;
-        public CityController(ICityService db,IOptions<ApiKeys> apiKeys)
+        public CityController(ICityService db, IOptions<ApiKeys> apiKeys)
         {
             _db = db;
             _apiKeys = apiKeys.Value;
         }
 
-        [HttpPost("test")]
-        public async Task<IActionResult> Test(IFormFile file)
-        {
-            
-            
-            var service = new CLoudStorage(_apiKeys.Key);
-            var path = await service.UploadImageAsync(file, @"Apps/CountryApi");
-            return Ok(new { path });
-           
-        }
 
         [HttpGet("GetCurrent")]
         public async Task<IActionResult> GetCurrent(string CityName)
@@ -77,9 +58,9 @@ namespace CountryInfoApi.Controllers
                 ReferenceHandler = ReferenceHandler.IgnoreCycles,
                 WriteIndented = true
             };
-            
-            
-            var res = JsonSerializer.Serialize(await _db.GetAll(), options); 
+
+
+            var res = JsonSerializer.Serialize(await _db.GetAll(), options);
             return Ok(res);
         }
 
@@ -92,21 +73,21 @@ namespace CountryInfoApi.Controllers
                                                .Select(e => e.ErrorMessage);
                 return BadRequest(errors);
             }
-            
+
             await _db.CreateAsync(CityDto);
             return Ok();
 
         }
 
         [HttpGet("GetCity/{id}")]
-        public  IActionResult GetCity(string id)
+        public IActionResult GetCity(string id)
         {
-            if (!Guid.TryParse(id,out Guid guid))
+            if (!Guid.TryParse(id, out Guid guid))
             {
                 return BadRequest();
             }
 
-            var city =  _db.GetById(guid);
+            var city = _db.GetById(guid);
             if (city == null)
             {
                 return NotFound();
@@ -123,9 +104,9 @@ namespace CountryInfoApi.Controllers
         }
 
         [HttpPut("UpdateCity/{id}")]
-        public async Task<IActionResult> UpdateCity(string id,[FromForm] CityDto City)
+        public async Task<IActionResult> UpdateCity(string id, [FromForm] CityDto City)
         {
-            if (!Guid.TryParse(id,out Guid guid))
+            if (!Guid.TryParse(id, out Guid guid))
             {
                 return NotFound();
             }
@@ -145,7 +126,7 @@ namespace CountryInfoApi.Controllers
         [HttpDelete("DeleteCity/{id}")]
         public async Task<IActionResult> DeleteCity(string id)
         {
-            if (!Guid.TryParse(id,out Guid guid))
+            if (!Guid.TryParse(id, out Guid guid))
             {
                 return NotFound();
             }
@@ -155,7 +136,7 @@ namespace CountryInfoApi.Controllers
                 await _db.DeleteAsync(id);
                 return Ok();
             }
-           
+
 
             return NotFound();
         }

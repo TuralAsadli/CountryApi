@@ -49,7 +49,7 @@ namespace CountryInfoApi.Service
             }
 
             place.PlaceImgs = placeImgs;
-            place.City = _cities.Get(cityId, c => c.RecomendedPlaces);
+            place.City = await _cities.Get(cityId, c => c.RecomendedPlaces);
             await _db.Create(place);
         }
 
@@ -57,7 +57,7 @@ namespace CountryInfoApi.Service
         {
             if (Guid.TryParse(id, out Guid guid))
             {
-                var place = _db.Get(guid, c => c.PlaceImgs);
+                var place = await _db.Get(guid, c => c.PlaceImgs);
                 if (place != null)
                 {
                     CLoudStorage storage = new CLoudStorage(_apiKeys.Key);
@@ -72,7 +72,7 @@ namespace CountryInfoApi.Service
 
         public async Task<IEnumerable<RecomendedPlaceGetDto>> GetAll()
         {
-            var places = _db.GetAll(i => i.PlaceImgs,c => c.City);
+            var places = await _db.GetAll(i => i.PlaceImgs,c => c.City);
             List<RecomendedPlaceGetDto> placesDto = new();
             foreach (var place in places)
             {
@@ -110,10 +110,10 @@ namespace CountryInfoApi.Service
 
         public async Task<RecomendedPlaceGetDto> GetById(Guid id)
         {
-            var place = _db.Get(id, c => c.PlaceImgs);
+            var place = await _db.Get(id, c => c.PlaceImgs);
             RecomendedPlaceGetDto placeDto = new RecomendedPlaceGetDto()
             {
-                Id=place.Id,
+                Id= place.Id,
                 PlaceName = place.PlaceName,
                 Coordinates = place.Coordinates,
                 Description = place.Description,
@@ -143,7 +143,7 @@ namespace CountryInfoApi.Service
 
         public async Task UpdateAsync(string id, RecomendedPlaceDto placeDto)
         {
-            var existingObject = _db.Get(Guid.Parse(id), c => c.PlaceImgs);
+            var existingObject = await _db.Get(Guid.Parse(id), c => c.PlaceImgs);
 
             existingObject.PlaceName = placeDto.PlaceName;
             existingObject.Description = placeDto.Description;

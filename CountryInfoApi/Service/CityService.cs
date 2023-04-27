@@ -1,15 +1,12 @@
 ﻿using CountryInfoApi.Abstractions.Repositories;
 using CountryInfoApi.Abstractions.Services;
 using CountryInfoApi.Dtos.City;
-using CountryInfoApi.Models;
-using System.Text.Json.Serialization;
-using System.Text.Json;
-using CountryInfoApi.Utilites.FiIeExtentions;
-using Dropbox.Api;
-using CountryInfoApi.Models.Base;
-using Microsoft.Extensions.Options;
-using CountryInfoApi.Utilites.CloudStorage;
 using CountryInfoApi.Dtos.RecomendedPlace;
+using CountryInfoApi.Models;
+using CountryInfoApi.Models.Base;
+using CountryInfoApi.Utilites.CloudStorage;
+using CountryInfoApi.Utilites.FiIeExtentions;
+using Microsoft.Extensions.Options;
 
 namespace CountryInfoApi.Service
 {
@@ -63,7 +60,7 @@ namespace CountryInfoApi.Service
         {
             if (Guid.TryParse(id, out Guid guid))
             {
-                var city = _db.Get(guid, c => c.CityImgs);
+                var city = await _db.Get(guid, c => c.CityImgs);
                 if (city != null)
                 {
                     CLoudStorage storage = new CLoudStorage(_apiKeys.Key);
@@ -78,7 +75,7 @@ namespace CountryInfoApi.Service
 
         public async Task<IEnumerable<GetCityDto>> GetAll()
         {
-            var cities = _db.GetAll(c => c.CityImgs, p => p.RecomendedPlaces);
+            var cities = await _db.GetAll(c => c.CityImgs, p => p.RecomendedPlaces);
             List<GetCityDto> citiesDto = new();
             foreach (var city in cities)
             {
@@ -89,7 +86,7 @@ namespace CountryInfoApi.Service
                     Area = city.Area,
                     Description = city.Description,
                     Population = city.Population,
-                    
+
 
                 };
                 var places = new List<RecomendedPlaceGetDto>();
@@ -97,12 +94,12 @@ namespace CountryInfoApi.Service
                 {
                     places.Add(new RecomendedPlaceGetDto()
                     {
-                        Id=place.Id,
+                        Id = place.Id,
                         PlaceName = place.PlaceName,
                         Coordinates = place.Coordinates,
                         Description = place.Description,
                     });
-                    
+
                 }
 
                 cityDto.Places = places;
@@ -125,7 +122,7 @@ namespace CountryInfoApi.Service
 
         public async Task<GetCityDto> GetById(Guid id)
         {
-            var city = _db.Get(id, c => c.CityImgs);
+            var city = await _db.Get(id, c => c.CityImgs);
             GetCityDto cityDto = new GetCityDto()
             {
                 CityName = city.CityName,
@@ -165,7 +162,7 @@ namespace CountryInfoApi.Service
 
         public async Task UpdateAsync(string id, CityDto cityDto)
         {
-            var existingObject = _db.Get(Guid.Parse(id), c => c.CityImgs);
+            var existingObject = await _db.Get(Guid.Parse(id), c => c.CityImgs);
 
             existingObject.CityName = cityDto.CityName;
             existingObject.Population = cityDto.Population;
