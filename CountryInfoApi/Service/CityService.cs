@@ -1,4 +1,5 @@
-﻿using CountryInfoApi.Abstractions.Repositories;
+﻿using AutoMapper;
+using CountryInfoApi.Abstractions.Repositories;
 using CountryInfoApi.Abstractions.Services;
 using CountryInfoApi.Dtos.City;
 using CountryInfoApi.Dtos.RecomendedPlace;
@@ -15,25 +16,21 @@ namespace CountryInfoApi.Service
         public readonly IBaseRepository<City> _db;
         public readonly IWebHostEnvironment _hostingEnvironment;
         public readonly IBaseRepository<RecomendedPlace> _places;
+        private readonly IMapper _mapper;
         ApiKeys _apiKeys;
 
-        public CityService(IBaseRepository<City> db, IWebHostEnvironment hostingEnvironment, IOptions<ApiKeys> apiKeys, IBaseRepository<RecomendedPlace> places)
+        public CityService(IBaseRepository<City> db, IWebHostEnvironment hostingEnvironment, IOptions<ApiKeys> apiKeys, IBaseRepository<RecomendedPlace> places, IMapper mapper)
         {
             _db = db;
             _hostingEnvironment = hostingEnvironment;
             _apiKeys = apiKeys.Value;
             _places = places;
+            _mapper = mapper;
         }
 
         public async Task CreateAsync(CityDto cityDto)
         {
-            City city = new City()
-            {
-                Area = cityDto.Area,
-                CityName = cityDto.CityName,
-                Description = cityDto.Description,
-                Population = cityDto.Population,
-            };
+            City city = _mapper.Map<City>(cityDto);
 
             List<CityImg> cityImgs = new List<CityImg>();
             foreach (var item in cityDto.CityImgs)
@@ -79,27 +76,11 @@ namespace CountryInfoApi.Service
             List<GetCityDto> citiesDto = new();
             foreach (var city in cities)
             {
-                GetCityDto cityDto = new GetCityDto()
-                {
-                    Id = city.Id,
-                    CityName = city.CityName,
-                    Area = city.Area,
-                    Description = city.Description,
-                    Population = city.Population,
-
-
-                };
+                GetCityDto cityDto = _mapper.Map<GetCityDto>(city);
                 var places = new List<RecomendedPlaceGetDto>();
                 foreach (var place in city.RecomendedPlaces)
                 {
-                    places.Add(new RecomendedPlaceGetDto()
-                    {
-                        Id = place.Id,
-                        PlaceName = place.PlaceName,
-                        Coordinates = place.Coordinates,
-                        Description = place.Description,
-                    });
-
+                    places.Add(_mapper.Map<RecomendedPlaceGetDto>(place));
                 }
 
                 cityDto.Places = places;
@@ -122,25 +103,13 @@ namespace CountryInfoApi.Service
 
         public async Task<GetCityDto> GetById(Guid id)
         {
-            var city = await _db.Get(id, c => c.CityImgs);
-            GetCityDto cityDto = new GetCityDto()
-            {
-                CityName = city.CityName,
-                Area = city.Area,
-                Description = city.Description,
-                Population = city.Population,
-
-            };
+            var city = await _db.Get(id, c => c.CityImgs, c => c.RecomendedPlaces);
+            GetCityDto cityDto = _mapper.Map<GetCityDto>(city);
 
             var places = new List<RecomendedPlaceGetDto>();
             foreach (var place in city.RecomendedPlaces)
             {
-                places.Add(new RecomendedPlaceGetDto()
-                {
-                    PlaceName = place.PlaceName,
-                    Coordinates = place.Coordinates,
-                    Description = place.Description,
-                });
+                places.Add(_mapper.Map<RecomendedPlaceGetDto>(place));
 
             }
             cityDto.Places = places;

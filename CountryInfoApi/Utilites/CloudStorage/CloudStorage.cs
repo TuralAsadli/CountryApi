@@ -69,9 +69,6 @@ namespace CountryInfoApi.Utilites.CloudStorage
             await _client.Files.DeleteV2Async(path);
         }
 
-        public void Test()
-        {
-            
-        }
+        
     }
 }

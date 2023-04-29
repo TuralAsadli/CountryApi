@@ -29,6 +29,7 @@ builder.Services.AddScoped<IBaseRepository<City>, BaseRepository<City>>();
 builder.Services.AddScoped<IBaseRepository<RecomendedPlace>, BaseRepository<RecomendedPlace>>();
 builder.Services.AddScoped<IBaseRepository<User>, BaseRepository<User>>();
 builder.Services.AddControllers();
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>

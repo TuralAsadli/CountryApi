@@ -86,3 +86,6 @@ C:\Users\Tural\source\repos\CountryInfoApi\CountryInfoApi\bin\Debug\net6.0\Swash
 C:\Users\Tural\source\repos\CountryInfoApi\CountryInfoApi\bin\Debug\net6.0\Swashbuckle.AspNetCore.Filters.Abstractions.dll
 C:\Users\Tural\source\repos\CountryInfoApi\CountryInfoApi\bin\Debug\net6.0\MySqlConnector.dll
 C:\Users\Tural\source\repos\CountryInfoApi\CountryInfoApi\bin\Debug\net6.0\Pomelo.EntityFrameworkCore.MySql.dll
+C:\Users\Tural\source\repos\CountryInfoApi\CountryInfoApi\bin\Debug\net6.0\AutoMapper.dll
+C:\Users\Tural\source\repos\CountryInfoApi\CountryInfoApi\bin\Debug\net6.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll
+C:\Users\Tural\source\repos\CountryInfoApi\CountryInfoApi\bin\Debug\net6.0\FluentValidation.dll
