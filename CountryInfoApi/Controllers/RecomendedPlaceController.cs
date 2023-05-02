@@ -1,8 +1,12 @@
 ﻿using CountryInfoApi.Abstractions.Services;
+using CountryInfoApi.Dtos.City;
+using CountryInfoApi.Dtos;
 using CountryInfoApi.Dtos.RecomendedPlace;
+using CountryInfoApi.Utilites.Validator;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using CountryInfoApi.Utilites.FiIeExtentions;
 
 namespace CountryInfoApi.Controllers
 {
@@ -12,11 +16,12 @@ namespace CountryInfoApi.Controllers
     {
         IRecomendedPlacesService _db;
         ICityService _cityService;
-
+        RecomendedPlaceValidator _validator;
         public RecomendedPlaceController(IRecomendedPlacesService db, ICityService cityService)
         {
             _db = db;
             _cityService = cityService;
+            _validator = new RecomendedPlaceValidator();
         }
 
         [HttpGet("GetCityPlaces/{cityId}")]
@@ -64,16 +69,40 @@ namespace CountryInfoApi.Controllers
         [HttpPost("CreatePlace")]
         public async Task<IActionResult> CreatePlace(string cityId, [FromForm] RecomendedPlaceDto placeDto)
         {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.Values.SelectMany(v => v.Errors)
-                                               .Select(e => e.ErrorMessage);
-                return BadRequest(errors);
-            }
             if (!Guid.TryParse(cityId, out Guid guid))
             {
                 return NotFound(cityId);
             }
+
+            var result = _validator.Validate(placeDto);
+            if (!result.IsValid)
+            {
+                List<ErrorDto> errorDtos = new List<ErrorDto>();
+                foreach (var error in result.Errors)
+                {
+                    ErrorDto errorDto = new ErrorDto()
+                    {
+                        ErrorMessage = error.ErrorMessage,
+                        PropertyName = error.PropertyName
+                    };
+                    errorDtos.Add(errorDto);
+                }
+                return BadRequest(errorDtos);
+            }
+
+            foreach (var formFile in placeDto.PlacesImgsFormFile)
+            {
+
+                if (!formFile.CheckImgFileType())
+                {
+                    return BadRequest(new ErrorDto()
+                    {
+                        ErrorMessage = "Incorrect Image file type",
+                        PropertyName = "PlacesImgsFormFile"
+                    });
+                }
+            }
+
             var city = await _cityService.GetById(guid);
             if (city == null)
             {
@@ -87,16 +116,40 @@ namespace CountryInfoApi.Controllers
         [HttpPut("UpdatePlace")]
         public async Task<IActionResult> UpdatePlace(string id, [FromForm] RecomendedPlaceDto placeDto)
         {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.Values.SelectMany(v => v.Errors)
-                                               .Select(e => e.ErrorMessage);
-                return BadRequest(errors);
-            }
             if (!Guid.TryParse(id, out Guid guid))
             {
                 return NotFound(id);
             }
+
+            var result = _validator.Validate(placeDto);
+            if (!result.IsValid)
+            {
+                List<ErrorDto> errorDtos = new List<ErrorDto>();
+                foreach (var error in result.Errors)
+                {
+                    ErrorDto errorDto = new ErrorDto()
+                    {
+                        ErrorMessage = error.ErrorMessage,
+                        PropertyName = error.PropertyName
+                    };
+                    errorDtos.Add(errorDto);
+                }
+                return BadRequest(errorDtos);
+            }
+
+            foreach (var formFile in placeDto.PlacesImgsFormFile)
+            {
+
+                if (!formFile.CheckImgFileType())
+                {
+                    return BadRequest(new ErrorDto()
+                    {
+                        ErrorMessage = "Incorrect Image file type",
+                        PropertyName = "PlacesImgsFormFile"
+                    });
+                }
+            }
+
 
             var place = await _db.GetById(guid);
             if (place == null)

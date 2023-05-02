@@ -1,8 +1,11 @@
 ﻿using CountryInfoApi.Abstractions.Services;
+using CountryInfoApi.Dtos;
 using CountryInfoApi.Dtos.City;
 using CountryInfoApi.Dtos.CurrentInfo;
 using CountryInfoApi.Dtos.ForecastInfo;
 using CountryInfoApi.Models.Base;
+using CountryInfoApi.Utilites.FiIeExtentions;
+using CountryInfoApi.Utilites.Validator;
 using CountryInfoApi.Utilites.WeatherInfo;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,10 +22,12 @@ namespace CountryInfoApi.Controllers
     {
         ICityService _db;
         ApiKeys _apiKeys;
+        CityValidator _validator;
         public CityController(ICityService db, IOptions<ApiKeys> apiKeys)
         {
             _db = db;
             _apiKeys = apiKeys.Value;
+            _validator = new CityValidator();
         }
 
 
@@ -67,11 +72,33 @@ namespace CountryInfoApi.Controllers
         [HttpPost("CreateCity")]
         public async Task<IActionResult> CreateCity([FromForm] CityDto CityDto)
         {
-            if (!ModelState.IsValid)
+            var result = _validator.Validate(CityDto);
+            if (!result.IsValid)
             {
-                var errors = ModelState.Values.SelectMany(v => v.Errors)
-                                               .Select(e => e.ErrorMessage);
-                return BadRequest(errors);
+                List<ErrorDto> errorDtos = new List<ErrorDto>();
+                foreach (var error in result.Errors)
+                {
+                    ErrorDto errorDto = new ErrorDto()
+                    {
+                        ErrorMessage = error.ErrorMessage,
+                        PropertyName = error.PropertyName
+                    };
+                    errorDtos.Add(errorDto);
+                }
+                return BadRequest(errorDtos);
+            }
+
+            foreach (var formFile in CityDto.CityImgsFormFile)
+            {
+                
+                if (!formFile.CheckImgFileType())
+                {
+                    return BadRequest(new ErrorDto()
+                    {
+                        ErrorMessage = "Incorrect Image file type",
+                        PropertyName = "CityImgs"
+                    });
+                }
             }
 
             await _db.CreateAsync(CityDto);
@@ -109,6 +136,35 @@ namespace CountryInfoApi.Controllers
             if (!Guid.TryParse(id, out Guid guid))
             {
                 return NotFound();
+            }
+
+            var result = _validator.Validate(City);
+            if (!result.IsValid)
+            {
+                List<ErrorDto> errorDtos = new List<ErrorDto>();
+                foreach (var error in result.Errors)
+                {
+                    ErrorDto errorDto = new ErrorDto()
+                    {
+                        ErrorMessage = error.ErrorMessage,
+                        PropertyName = error.PropertyName
+                    };
+                    errorDtos.Add(errorDto);
+                }
+                return BadRequest(errorDtos);
+            }
+
+            foreach (var formFile in City.CityImgsFormFile)
+            {
+
+                if (!formFile.CheckImgFileType())
+                {
+                    return BadRequest(new ErrorDto()
+                    {
+                        ErrorMessage = "Incorrect Image file type",
+                        PropertyName = "CityImgs"
+                    });
+                }
             }
 
             var existingObject = _db.GetById(guid);

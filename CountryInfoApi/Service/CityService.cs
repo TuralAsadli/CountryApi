@@ -8,6 +8,7 @@ using CountryInfoApi.Models.Base;
 using CountryInfoApi.Utilites.CloudStorage;
 using CountryInfoApi.Utilites.FiIeExtentions;
 using Microsoft.Extensions.Options;
+using System.Linq;
 
 namespace CountryInfoApi.Service
 {
@@ -33,7 +34,7 @@ namespace CountryInfoApi.Service
             City city = _mapper.Map<City>(cityDto);
 
             List<CityImg> cityImgs = new List<CityImg>();
-            foreach (var item in cityDto.CityImgs)
+            foreach (var item in cityDto.CityImgsFormFile)
             {
                 if (item.CheckImgFileType())
                 {
@@ -106,12 +107,8 @@ namespace CountryInfoApi.Service
             var city = await _db.Get(id, c => c.CityImgs, c => c.RecomendedPlaces);
             GetCityDto cityDto = _mapper.Map<GetCityDto>(city);
 
-            var places = new List<RecomendedPlaceGetDto>();
-            foreach (var place in city.RecomendedPlaces)
-            {
-                places.Add(_mapper.Map<RecomendedPlaceGetDto>(place));
-
-            }
+            var places = (from place in city.RecomendedPlaces
+                          select _mapper.Map<RecomendedPlaceGetDto>(place)).ToList();
             cityDto.Places = places;
 
             List<string> imgs = new List<string>();
@@ -138,7 +135,7 @@ namespace CountryInfoApi.Service
             existingObject.Description = cityDto.Description;
             existingObject.Area = cityDto.Area;
 
-            if (cityDto.CityImgs != null)
+            if (cityDto.CityImgsFormFile != null)
             {
                 CLoudStorage storage = new CLoudStorage(_apiKeys.Key);
                 foreach (var img in existingObject.CityImgs)
@@ -147,7 +144,7 @@ namespace CountryInfoApi.Service
                 }
 
                 List<CityImg> cityImgs = new List<CityImg>();
-                foreach (var img in cityDto.CityImgs)
+                foreach (var img in cityDto.CityImgsFormFile)
                 {
                     if (img.CheckImgFileType())
                     {

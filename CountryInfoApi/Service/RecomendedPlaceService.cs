@@ -32,7 +32,7 @@ namespace CountryInfoApi.Service
             RecomendedPlace place = _mapper.Map<RecomendedPlace>(placeDto);
 
             List<PlaceImg> placeImgs = new List<PlaceImg>();
-            foreach (var item in placeDto.PlacesImgs)
+            foreach (var item in placeDto.PlacesImgsFormFile)
             {
                 if (item.CheckImgFileType())
                 {
@@ -120,7 +120,7 @@ namespace CountryInfoApi.Service
             existingObject.Coordinates = placeDto.Coordinates;
             
 
-            if (placeDto.PlacesImgs != null)
+            if (placeDto.PlacesImgsFormFile != null)
             {
                 CLoudStorage storage = new CLoudStorage(_apiKeys.Key);
                 foreach (var img in existingObject.PlaceImgs)
@@ -129,7 +129,7 @@ namespace CountryInfoApi.Service
                 }
 
                 List<PlaceImg> placeImgs = new List<PlaceImg>();
-                foreach (var img in placeDto.PlacesImgs)
+                foreach (var img in placeDto.PlacesImgsFormFile)
                 {
                     if (img.CheckImgFileType())
                     {
