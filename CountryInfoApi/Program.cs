@@ -58,7 +58,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
        };
    });
 
-
+builder.Services.AddCors(options => options.AddPolicy("AllowAllOrigins",
+        builder =>
+        {
+            builder.AllowAnyOrigin()
+                   .AllowAnyHeader()
+                   .AllowAnyMethod();
+        }));
 
 var app = builder.Build();
 
@@ -73,15 +79,11 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseCors("AllowAllOrigins");
+
 app.UseStaticFiles();
 
 app.MapControllers();
 
 app.Run();
 
-
-//app.UseCors(x => x
-//        .WithOrigins("https://localhost:3000") // путь к нашему SPA клиенту
-//        .AllowCredentials()
-//        .AllowAnyMethod()
-//        .AllowAnyHeader());
