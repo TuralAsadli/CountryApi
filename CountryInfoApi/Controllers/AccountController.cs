@@ -19,12 +19,15 @@ namespace CountryInfoApi.Controllers
         AppDbContext Context;
         IConfiguration _configuration;
         UserValidator _validator;
-        public AccountController(IBaseRepository<User> context, IConfiguration configuration, AppDbContext appcontext)
+        ILogger<AccountController> _logger;
+
+        public AccountController(IBaseRepository<User> context, IConfiguration configuration, AppDbContext appcontext, ILogger<AccountController> logger = null)
         {
             _context = context;
             _configuration = configuration;
             Context = appcontext;
             _validator = new UserValidator();
+            _logger = logger;
         }
 
         [HttpPost("Registration")]
@@ -41,6 +44,7 @@ namespace CountryInfoApi.Controllers
                     user.PasswordHash = passwordHash;
                     user.PasswordSalt = passwordSalt;
                     await _context.Create(user);
+                    _logger.LogInformation($"User Email:{user.Email} is registered");
                     return Ok();
                 }
                 
@@ -78,6 +82,7 @@ namespace CountryInfoApi.Controllers
 
 
             var token = JwtTokenHelper.CreateToken(User, _configuration);
+            _logger.LogInformation($"Created token for UserEmail:{user.Email}");
             return Ok(token);
         }
     }

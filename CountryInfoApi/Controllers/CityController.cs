@@ -12,29 +12,33 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using static Dropbox.Api.Files.ListRevisionsMode;
+using static Dropbox.Api.TeamLog.TimeUnit;
 
 namespace CountryInfoApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class CityController : ControllerBase
     {
         ICityService _db;
         ApiKeys _apiKeys;
         CityValidator _validator;
-        public CityController(ICityService db, IOptions<ApiKeys> apiKeys)
+        ILogger<CityController> _logger;
+        public CityController(ICityService db, IOptions<ApiKeys> apiKeys, ILogger<CityController> logger)
         {
             _db = db;
             _apiKeys = apiKeys.Value;
             _validator = new CityValidator();
+            _logger = logger;
+            
         }
 
 
         [HttpGet("GetCurrent")]
         public async Task<IActionResult> GetCurrent(string CityName)
         {
-
             CurrentInfoDto res = await WeatherApi.GetCurrentInfo(CityName);
             if (res == null)
             {
@@ -66,6 +70,33 @@ namespace CountryInfoApi.Controllers
 
 
             var res = JsonSerializer.Serialize(await _db.GetAll(), options);
+            return Ok(res);
+        }
+
+        [HttpGet("GetCitiyWithForecast")]
+        public async Task<IActionResult> GetCitiyWithForecast(string Cityid, int days)
+        {
+            JsonSerializerOptions options = new()
+            {
+                ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                WriteIndented = true
+            };
+
+            if (!Guid.TryParse(Cityid, out Guid guid))
+            {
+                return BadRequest();
+            }
+
+            CityDtoWithForecast dtoWithForecast = new CityDtoWithForecast();
+            dtoWithForecast.City = await _db.GetById(guid);
+            if (dtoWithForecast.City == null)
+            {
+                return NotFound(Cityid);
+            }
+
+            dtoWithForecast.ForecastDto = await WeatherApi.GetForecastInfo(dtoWithForecast.City.CityName, days);
+
+            var res = JsonSerializer.Serialize(dtoWithForecast, options);
             return Ok(res);
         }
 
@@ -107,17 +138,17 @@ namespace CountryInfoApi.Controllers
         }
 
         [HttpGet("GetCity/{id}")]
-        public IActionResult GetCity(string id)
+        public async Task<IActionResult> GetCity(string id)
         {
             if (!Guid.TryParse(id, out Guid guid))
             {
                 return BadRequest();
             }
 
-            var city = _db.GetById(guid);
+            var city = await _db.GetById(guid);
             if (city == null)
             {
-                return NotFound();
+                return NotFound(id);
             }
 
             JsonSerializerOptions options = new()

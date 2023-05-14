@@ -4,9 +4,6 @@ namespace CountryInfoApi.Utilites.PasswordHelpers
 {
     public class PasswordHelper
     {
-        private const int SaltSize = 16;
-        private const int HashSize = 32;
-        private const int Iterations = 10000;
 
         public static void HashPassword(string password, out byte[] passwordHash, out byte[] passwordSlat)
         {

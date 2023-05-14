@@ -9,11 +9,21 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using NLog;
+using NLog.Web;
+using NLog.Config;
 using Swashbuckle.AspNetCore.Filters;
 using System.Text;
+using NLog.Extensions.Logging;
+
+var logger = NLog.LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
+logger.Debug("init main");
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+builder.Logging.ClearProviders();
+builder.Host.UseNLog();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
@@ -66,7 +76,11 @@ builder.Services.AddCors(options => options.AddPolicy("AllowAllOrigins",
                    .AllowAnyMethod();
         }));
 
+logger.Error("error");
+
+
 var app = builder.Build();
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
